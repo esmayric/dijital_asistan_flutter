@@ -4,63 +4,81 @@ import 'DegerGiris.dart';
 import 'TahlilSonuclari.dart';
 import 'IlacTakipPage.dart';
 import 'MakalePage.dart';
+import 'UserProfileScreen.dart';  // UserProfileScreen sayfasını import et
 
-class InfiniteHealthHomePage extends StatelessWidget {
+class InfiniteHealthHomePage extends StatefulWidget {
   final String userName;
-  final int userId; // 💥 userId'yi ekliyoruz
+  final int userId;
 
-  const InfiniteHealthHomePage({super.key, required this.userName, required this.userId});
+  const InfiniteHealthHomePage({
+    super.key,
+    required this.userName,
+    required this.userId,
+  });
+
+  @override
+  State<InfiniteHealthHomePage> createState() => _InfiniteHealthHomePageState();
+}
+
+class _InfiniteHealthHomePageState extends State<InfiniteHealthHomePage> {
+  int waterCount = 0;
 
   @override
   Widget build(BuildContext context) {
-    print('InfiniteHealthHomePage userId: $userId');
+    print('InfiniteHealthHomePage userId: ${widget.userId}');
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7FDFD),
       body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 10),
-            // Üst Profil ve Logo
+
+            // ÜST PROFİL ALANI
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Row(
                 children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Color(0xFF94D9C6),
-                            width: 1,
+                  GestureDetector(
+                    onTap: () {
+                      // Profil resmine tıklanınca UserProfileScreen'e git
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserProfileScreen(
+                            userId: widget.userId,
+                            ),
+                        ),
+                      );
+                    },
+                    child: Stack(
+                      alignment: Alignment.center,
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Color(0xFF94D9C6), width: 1),
                           ),
                         ),
-                      ),
-                      Container(
-                        width: 85,
-                        height: 85,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Color(0xFF59A7A7),
-                            width: 1,
+                        Container(
+                          width: 85,
+                          height: 85,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Color(0xFF59A7A7), width: 1),
                           ),
                         ),
-                      ),
-                      const Positioned(
-                        child: Center(
+                        const Positioned(
                           child: CircleAvatar(
                             radius: 30,
                             backgroundImage: AssetImage('assets/profile.png'),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Column(
@@ -68,39 +86,40 @@ class InfiniteHealthHomePage extends StatelessWidget {
                     children: [
                       const Text('Hoş geldiniz!', style: TextStyle(fontSize: 16)),
                       Text(
-                        userName,
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
+                        widget.userName,
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
+
             const SizedBox(height: 10),
             Image.asset('assets/logo.png', width: 80),
             const Text(
               'INFINITE HEALTH',
               style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF5FB5B5)),
-            ),
-            const SizedBox(height: 8),
-            Center(
-              child: SizedBox(
-                width: 450,
-                child: const LinearProgressIndicator(
-                  value: 3.0,
-                  color: Color(0xFF5FB5B5),
-                  backgroundColor: Colors.white,
-                  minHeight: 4,
-                ),
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF5FB5B5),
               ),
             ),
+
+            const SizedBox(height: 8),
+            const SizedBox(
+              width: 450,
+              child: LinearProgressIndicator(
+                value: 3.0,
+                color: Color(0xFF5FB5B5),
+                backgroundColor: Colors.white,
+                minHeight: 4,
+              ),
+            ),
+
             const SizedBox(height: 80),
 
-            // Bilgilendirici Kutu
+            // BESLENME BİLGİ KARTI
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Stack(
@@ -160,31 +179,33 @@ class InfiniteHealthHomePage extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 32),
-ElevatedButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const MakalePage()),
-    );
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.teal,
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(30),
-    ),
-  ),
-  child: const Text(
-    'Makaleyi Oku',
-    style: TextStyle(
-      fontSize: 18,
-      color: Colors.white,
-    ),
-  ),
-),
 
-            // SU TAKİBİ & ADIMSAYAR
+            const SizedBox(height: 32),
+
+            // MAKALE BUTONU
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MakalePage()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              child: const Text(
+                'Makaleyi Oku',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // SU TAKİBİ VE ADIMSAYAR
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -202,61 +223,78 @@ ElevatedButton(
                             color: Color(0xFF9FC9E9),
                           ),
                         ),
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
-                              width: double.infinity,
-                              height: 200,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [Color(0xFF9FC9E9), Color(0xFF59A7A7)],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Gün içinde ne kadar su içtiğini takip etmek sağlıklıdır.',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  const Text(
-                                    'Hatırlatıcı bildirimleri açmayı unutma!',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  LinearProgressIndicator(
-                                    value: 0.5,
-                                    minHeight: 8,
-                                    backgroundColor: Colors.white.withOpacity(0.3),
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ],
-                              ),
+                        Container(
+                          width: double.infinity,
+                          height: 220,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0xFF9FC9E9), Color(0xFF59A7A7)],
                             ),
-                            Positioned(
-                              bottom: -30,
-                              left: 0,
-                              right: 0,
-                              child: Center(
-                                child: Image.asset(
-                                  'assets/water.png',
-                                  width: 280,
-                                  fit: BoxFit.contain,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Gün içinde ne kadar su içtiğini takip etmek sağlıklıdır.',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              const Text(
+                                'Hatırlatıcı bildirimleri açmayı unutma!',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              const SizedBox(height: 10),
+                              LinearProgressIndicator(
+                                value: (waterCount / 8).clamp(0.0, 1.0),
+                                minHeight: 8,
+                                backgroundColor: Colors.white.withOpacity(0.3),
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              const SizedBox(height: 10),
+                              Center(
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      '$waterCount / 8 bardak',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          if (waterCount < 8) {
+                                            waterCount++;
+                                          }
+                                        });
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: Colors.teal,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                      ),
+                                      child: const Text('+1 Bardak Ekle'),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
+
                   const SizedBox(width: 12),
+
                   // ADIMSAYAR
                   Expanded(
                     child: Column(
@@ -286,22 +324,14 @@ ElevatedButton(
                               ),
                               child: const Column(
                                 children: [
-                                  Text(
-                                    'Bugün',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  Text(
-                                    '4973',
-                                    style: TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  Text(
-                                    'adım attınız.',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
+                                  Text('Bugün', style: TextStyle(color: Colors.white)),
+                                  Text('4973',
+                                      style: TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white)),
+                                  Text('adım attınız.',
+                                      style: TextStyle(color: Colors.white)),
                                   SizedBox(height: 10),
                                   LinearProgressIndicator(
                                     value: 0.65,
@@ -332,18 +362,7 @@ ElevatedButton(
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            Center(
-              child: SizedBox(
-                width: 450,
-                child: const LinearProgressIndicator(
-                  value: 3.0,
-                  color: Color(0xFF5FB5B5),
-                  backgroundColor: Colors.white,
-                  minHeight: 4,
-                ),
-              ),
-            ),
+
             const SizedBox(height: 24),
 
             // BUTONLAR
@@ -355,32 +374,30 @@ ElevatedButton(
                 alignment: WrapAlignment.center,
                 children: [
                   _menuButton('İLAÇ TAKİP', Icons.medical_services, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => IlacTakipPage()),
-                    );
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => IlacTakipPage()));
                   }),
                   _menuButton('DEĞER GİRİŞ', Icons.bar_chart, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => DegerGiris()),
-                    );
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => DegerGiris()));
                   }),
                   _menuButton('TAHLİL SONUÇLARI', Icons.list_alt, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => TahlilSonuclari()),
-                    );
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => TahlilSonuclari()));
                   }),
                   _menuButton('RANDEVU', Icons.calendar_month, () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AppointmentScreen(userId: userId)),
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AppointmentScreen(userId: widget.userId),
+                      ),
                     );
                   }),
                 ],
               ),
             ),
+
             const SizedBox(height: 100),
           ],
         ),

@@ -1,24 +1,36 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:flutter/material.dart';
 class AppointmentService {
   static const String baseUrl = 'http://localhost:7293/api/RandevuTakip';
 
   // Randevuları almak için
   static Future<List<Map<String, dynamic>>> getAppointments() async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId');
+    final token = prefs.getString('token');
 
-    if (userId == null) {
-      print("Kullanıcı ID'si bulunamadı.");
+    if (token == null) {
+      print("Token bulunamadı!");
       return [];
     }
-
-    final response = await http.get(Uri.parse('$baseUrl/$userId/randevular'));
+    
+    final response = await http.get(
+      Uri.parse(baseUrl),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
+
+      for (var appointment in data) {
+        print("Randevu Verisi: $appointment");  
+        print("Randevu ID: ${appointment['randevuId']}");  
+      }
+
       return data.map((e) => e as Map<String, dynamic>).toList();
     } else {
       print("Randevular alınamadı!");
@@ -30,7 +42,6 @@ class AppointmentService {
 
   // Randevu eklemek için
   static Future<bool> addAppointment(int userId, String date, String time, String doctor, String note) async {
-    // Token'ı SharedPreferences'tan alıyoruz
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
@@ -43,13 +54,13 @@ class AppointmentService {
       Uri.parse('http://localhost:7293/api/RandevuTakip/ekle'),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token', // Token'ı Authorization header'a ekliyoruz
+        'Authorization': 'Bearer $token',
       },
       body: jsonEncode({
-        'randevuTarihi': date, // Tarih formatı: 2025-04-19T20:06:42.917Z
-        'randevuSaati': time,  // Saat formatı: 14:24:00
-        'doktorAdi': doctor,   // Doktor adı
-        'notlar': note,        // Notlar
+        'randevuTarihi': date, 
+        'randevuSaati': time,  
+        'doktorAdi': doctor,   
+        'notlar': note,        
       }),
     );
 
@@ -62,43 +73,46 @@ class AppointmentService {
       return false;
     }
   }
-  // Randevu silmek için
-// Randevu silmek için
-static Future<bool> deleteAppointment(int randevuId) async {
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
 
-    if (token == null) {
-      print("Token bulunamadı!");
+  // Randevu silme işlemi
+  static Future<bool> deleteAppointment(int randevuId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      if (token == null) {
+        print("Token bulunamadı!");
+        return false;
+      }
+
+      if (randevuId == null || randevuId == 0) {
+        print("Geçersiz randevuId!");
+        return false;
+      }
+
+      final url = Uri.parse('$baseUrl/$randevuId'); // ID artık doğrudan int olarak kullanılıyor
+
+      final response = await http.delete(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print("✅ Randevu başarıyla silindi.");
+        return true;
+      } else if (response.statusCode == 401) {
+        print("⛔ Silme izniniz yok!");
+        return false;
+      } else {
+        print("❌ Randevu silinemedi! Hata Kodu: ${response.statusCode}");
+        print("Hata Detayı: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("💥 Beklenmeyen bir hata oluştu: $e");
       return false;
     }
-
-    // API URL'sini randevuId ile birlikte oluşturuyoruz
-    final url = Uri.parse('$baseUrl/$randevuId'); // randevuId'yi URL'de kullanıyoruz
-
-    // HTTP DELETE isteği gönderiyoruz
-    final response = await http.delete(
-      url,
-      headers: {
-        'Authorization': 'Bearer $token', // Authorization header'a token ekliyoruz
-      },
-    );
-
-    // HTTP yanıtına göre işlem yapıyoruz
-    if (response.statusCode == 200) {
-      print("Randevu başarıyla silindi.");
-      return true;
-    } else {
-      print("Randevu silinemedi!");
-      print("Hata Kodu: ${response.statusCode}");
-      print("Mesaj: ${response.body}");
-      return false;
-    }
-  } catch (e) {
-    // Hata durumunu yakalıyoruz
-    print("Beklenmeyen bir hata oluştu: $e");
-    return false;
   }
-}
 }

@@ -5,7 +5,7 @@ import 'package:flutter_application_1/services/AppointmentService.dart';
 
 class AppointmentScreen extends StatefulWidget {
   final int userId;
-  
+
   AppointmentScreen({super.key, required this.userId});
 
   @override
@@ -13,17 +13,78 @@ class AppointmentScreen extends StatefulWidget {
 }
 
 class _AppointmentScreenState extends State<AppointmentScreen> {
-  Map<DateTime, List<Map<String, dynamic>>> appointments = {}; // ID'yi de saklayacak şekilde güncelledik
+  Map<DateTime, List<Map<String, dynamic>>> appointments = {};
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
 
-  // TimeOfDay'i Duration'a dönüştürmek için yardımcı fonksiyon
+  @override
+  void initState() {
+    super.initState();
+    _loadAppointments();
+  }
+
+  Future<void> _loadAppointments() async {
+    List<Map<String, dynamic>> fetchedAppointments = await AppointmentService.getAppointments();
+
+    Map<DateTime, List<Map<String, dynamic>>> organizedAppointments = {};
+
+    for (var appt in fetchedAppointments) {
+      DateTime? date = DateTime.tryParse(appt['randevuTarihi']);
+      if (date == null) {
+        print("Geçersiz tarih formatı: ${appt['randevuTarihi']}");
+        continue; // Veriyi atla
+      }
+
+      String time = appt['randevuSaati'] ?? '';
+      String doctor = appt['doktorAdi'] ?? '';
+      String note = appt['notlar'] ?? '';
+
+      dynamic rawId = appt['id'] ?? appt['randevuId']; // varsa randevuId de bak
+if (rawId == null) {
+  print("Randevunun ID'si eksik! Atlanıyor: $appt");
+  continue; // SKIP et, kendi kafamıza göre id uydurmuyoruz artık
+}
+
+int? id = rawId is int ? rawId : int.tryParse(rawId.toString());
+
+if (id == null) {
+  print("ID çözülemedi: $rawId");
+  continue;
+}
+      DateTime onlyDate = DateTime(date.year, date.month, date.day);
+
+      organizedAppointments.putIfAbsent(onlyDate, () => []);
+      organizedAppointments[onlyDate]!.add({
+        "id": id,
+        "time": time,
+        "doctor": doctor,
+        "note": note,
+      });
+    }
+
+    setState(() {
+      appointments = organizedAppointments;
+    });
+  }
+
   String _convertTimeToString(TimeOfDay time) {
-    final hours = time.hour;
-    final minutes = time.minute;
-    final duration = Duration(hours: hours, minutes: minutes);
-    return duration.toString(); // "HH:mm:ss" formatında döner
+    final DateFormat formatter = DateFormat('HH:mm');
+    return formatter.format(DateTime(0, 0, 0, time.hour, time.minute));
+  }
+
+  bool isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
+  }
+
+  List<Map<String, dynamic>> getAppointmentsForDay(DateTime day) {
+    return appointments.entries
+        .where((entry) => isSameDay(entry.key, day))
+        .map((entry) => entry.value)
+        .expand((element) => element)
+        .toList();
   }
 
   void _showAddAppointmentDialog() {
@@ -72,36 +133,31 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
             ),
             TextButton(
               onPressed: () async {
-                if (selectedTime != null && doctorController.text.isNotEmpty) {
-                  // TimeOfDay'ı string formata dönüştür
-                  String timeString = _convertTimeToString(selectedTime!);
-
-                  bool success = await AppointmentService.addAppointment(
-                    widget.userId,
-                    DateFormat('yyyy-MM-dd').format(_selectedDay),
-                    timeString,
-                    doctorController.text,
-                    noteController.text,
+                if (selectedTime == null || doctorController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Lütfen tüm alanları doldurun!")),
                   );
-                  if (success) {
-                    setState(() {
-                      appointments[_selectedDay] = appointments[_selectedDay] ?? [];
-                      // Randevu eklerken ID'yi de alıyoruz
-                      appointments[_selectedDay]!.add({
-                        "id": DateTime.now().millisecondsSinceEpoch,  // ID olarak örnek bir değer kullandık
-                        "time": timeString,
-                        "doctor": doctorController.text,
-                        "note": noteController.text,
-                      });
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Randevu başarıyla eklendi!")),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Randevu eklenemedi. Lütfen tekrar deneyin.")),
-                    );
-                  }
+                  return;
+                }
+
+                String timeString = _convertTimeToString(selectedTime!);
+
+                bool success = await AppointmentService.addAppointment(
+                  widget.userId,
+                  DateFormat('yyyy-MM-dd').format(_selectedDay),
+                  timeString,
+                  doctorController.text,
+                  noteController.text,
+                );
+                if (success) {
+                  await _loadAppointments();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Randevu başarıyla eklendi!")),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Randevu eklenemedi. Lütfen tekrar deneyin.")),
+                  );
                 }
                 Navigator.pop(context);
               },
@@ -114,70 +170,75 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   }
 
   void _showDeleteAppointmentDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Randevu Sil"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: appointments[_selectedDay]?.map((appointment) {
-              return ListTile(
-                title: Text("Doktor: ${appointment["doctor"]}"),
-                subtitle: Text("Saat: ${appointment["time"]}\nNot: ${appointment["note"]}"),
-                trailing: IconButton(
-                  icon: Icon(Icons.delete, color: Colors.red),
-                  onPressed: () async {
-                    // Silmek için randevu ID'sini alıyoruz
-                    final randevuId = appointment["id"];
+  List<Map<String, dynamic>> todaysAppointments = getAppointmentsForDay(_selectedDay);
 
-                    if (randevuId == null) {
-                      print("Randevu ID'si geçerli değil.");
-                      return;
-                    }
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text("Randevu Sil"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: todaysAppointments.isNotEmpty
+              ? todaysAppointments.map((appointment) {
+                  final dynamic rawId = appointment['id'];
+                  final int? randevuId = rawId is int
+                      ? rawId
+                      : (rawId is String ? int.tryParse(rawId) : null);
 
-                    bool success = await AppointmentService.deleteAppointment(randevuId);
-
-                    if (success) {
-                      setState(() {
-                        appointments[_selectedDay]?.remove(appointment);
-                        if (appointments[_selectedDay]?.isEmpty ?? false) {
-                          appointments.remove(_selectedDay);
+                  return ListTile(
+                    title: Text("Doktor: ${appointment["doctor"]}"),
+                    subtitle: Text("Saat: ${appointment["time"]}\nNot: ${appointment["note"]}"),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () async {
+                        if (randevuId == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Geçersiz randevu ID'si!")),
+                          );
+                          return;
                         }
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Randevu başarıyla silindi!")),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Randevu silinemedi. Lütfen tekrar deneyin.")),
-                      );
-                    }
 
-                    Navigator.pop(context);
-                  },
-                ),
-              );
-            }).toList() ?? [
-              Center(
-                child: Text("Silinecek randevu yok.",
-                    style: TextStyle(color: Colors.grey)),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Kapat"),
-            ),
-          ],
-        );
-      },
-    );
-  }
+                        bool success = await AppointmentService.deleteAppointment(randevuId);
+
+                        if (success) {
+                          await _loadAppointments();
+                          Navigator.pop(context); // Artık burada, tam yerinde!
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Randevu başarıyla silindi!")),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Randevu silinemedi. Lütfen tekrar deneyin.")),
+                          );
+                        }
+                      },
+                    ),
+                  );
+                }).toList()
+              : [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text("Bugün için silinecek randevu bulunamadı."),
+                  )
+                ],
+        ),
+        actions: [
+          TextButton(
+            child: Text("Kapat"),
+            onPressed: () => Navigator.pop(context),
+          )
+        ],
+      );
+    },
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
+    List<Map<String, dynamic>> todaysAppointments = getAppointmentsForDay(_selectedDay);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
@@ -225,7 +286,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                   _focusedDay = focusedDay;
                 });
               },
-              eventLoader: (day) => appointments[day] ?? [],
+              eventLoader: (day) => getAppointmentsForDay(day),
+              
             ),
             SizedBox(height: 10),
             Row(
@@ -247,24 +309,23 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
             ),
             SizedBox(height: 20),
             Expanded(
-              child: ListView(
-                children: appointments[_selectedDay]?.map((appointment) {
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                    child: ListTile(
-                      title: Text("Doktor: ${appointment["doctor"]}"),
-                      subtitle: Text(
-                          "Saat: ${appointment["time"]}\nNot: ${appointment["note"]}"),
+              child: todaysAppointments.isNotEmpty
+                  ? ListView.builder(
+                      itemCount: todaysAppointments.length,
+                      itemBuilder: (context, index) {
+                        var appointment = todaysAppointments[index];
+                        return Card(
+                          margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                          child: ListTile(
+                            title: Text("Doktor: ${appointment["doctor"]}"),
+                            subtitle: Text("Saat: ${appointment["time"]}\nNot: ${appointment["note"]}"),
+                          ),
+                        );
+                      },
+                    )
+                  : Center(
+                      child: Text("Bugün için randevu yok.", style: TextStyle(color: Colors.grey)),
                     ),
-                  );
-                }).toList() ?? 
-                [
-                  Center(
-                    child: Text("Bugün için randevu yok.",
-                        style: TextStyle(color: Colors.grey)),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
