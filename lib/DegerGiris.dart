@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/TansiyonGirisEkrani.dart'; // Tansiyon giriş ekranını ekliyoruz
 
 class DegerGiris extends StatelessWidget {
   const DegerGiris({super.key});
 
-   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -11,15 +12,15 @@ class DegerGiris extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const SizedBox(height: 50), // Üstte boşluk bırakıyor
+            const SizedBox(height: 50),
             Center(
               child: Column(
                 children: [
                   Image.asset(
-                    "assets/logo.png", // Logo
-                    height: 80,  // Boyutu ayarlayabilirsin
+                    "assets/logo.png",
+                    height: 80,
                   ),
-                  const SizedBox(height: 10), // Logo ile başlık arasında boşluk
+                  const SizedBox(height: 10),
                   const Text(
                     "DEGER GIRIS",
                     style: TextStyle(
@@ -31,7 +32,7 @@ class DegerGiris extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 20), // Başlık ile arama çubuğu arasında boşluk
+            const SizedBox(height: 20),
             TextField(
               decoration: InputDecoration(
                 prefixIcon: Icon(Icons.search, color: Colors.teal),
@@ -48,11 +49,32 @@ class DegerGiris extends StatelessWidget {
             Expanded(
               child: ListView(
                 children: [
-                  healthButton("KAN DEGERLERI", Colors.red[300], Icons.bloodtype),
-                  healthButton("KALP DEGERLERI", Colors.pink[300], Icons.favorite),
-                  healthButton("SEKER DEGERLERI", Colors.lightGreen[400], Icons.medical_services),
-                  healthButton("TANSIYON DEGERLERI", Colors.yellow[600], Icons.monitor_heart),
-                  healthButton("TAHIL SONUCLARI", Colors.orange[300], Icons.assignment),
+                  healthButton(
+                    "KAN DEGERLERI", 
+                    Colors.red[300], 
+                    Icons.bloodtype
+                  ),
+                  healthButton(
+                    "KALP DEGERLERI", 
+                    Colors.pink[300], 
+                    Icons.favorite
+                  ),
+                  healthButton(
+                    "SEKER DEGERLERI", 
+                    Colors.lightGreen[400], 
+                    Icons.medical_services
+                  ),
+                  healthButton(
+                    "TANSIYON DEGERLERI", 
+                    Colors.yellow[600], 
+                    Icons.monitor_heart, 
+                    context
+                  ),
+                  healthButton(
+                    "TAHIL SONUCLARI", 
+                    Colors.orange[300], 
+                    Icons.assignment
+                  ),
                 ],
               ),
             ),
@@ -62,8 +84,7 @@ class DegerGiris extends StatelessWidget {
     );
   }
 
-
-  Widget healthButton(String text, Color? color, IconData icon) {
+  Widget healthButton(String text, Color? color, IconData icon, [BuildContext? context]) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: ElevatedButton(
@@ -74,7 +95,15 @@ class DegerGiris extends StatelessWidget {
           ),
           padding: EdgeInsets.symmetric(vertical: 50, horizontal: 30),
         ),
-        onPressed: () {},
+        onPressed: () {
+          if (text == "TANSIYON DEGERLERI" && context != null) {
+            // Tansiyon butonuna tıklanınca Tansiyon Giriş Ekranına geçiş
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => TansiyonGirisEkrani()),
+            );
+          }
+        },
         child: Row(
           children: [
             Icon(icon, color: Colors.white, size: 50),

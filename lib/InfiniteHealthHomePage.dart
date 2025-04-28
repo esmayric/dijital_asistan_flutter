@@ -375,8 +375,14 @@ class _InfiniteHealthHomePageState extends State<InfiniteHealthHomePage> {
                 children: [
                   _menuButton('İLAÇ TAKİP', Icons.medical_services, () {
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => IlacTakipPage()));
-                  }),
+    MaterialPageRoute(
+      builder: (context) => 
+      IlacTakipPage(userId: widget.userId)
+    )
+  );
+}),
+
+
                   _menuButton('DEĞER GİRİŞ', Icons.bar_chart, () {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) => DegerGiris()));

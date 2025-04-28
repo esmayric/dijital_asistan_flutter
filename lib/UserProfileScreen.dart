@@ -22,9 +22,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Future<void> _fetchUserData() async {
-    // Token'ı SharedPreferences'den al
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');  // Token burada alınacak
+    final token = prefs.getString('token');
 
     if (token != null) {
       final data = await UserService.getUserProfile(widget.userId, token);
@@ -43,49 +42,123 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Profilim"),
-        backgroundColor: Colors.teal,
-      ),
+      backgroundColor: Colors.white,
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : userData == null
               ? Center(child: Text("Kullanıcı bilgisi alınamadı."))
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Logo PNG
+                      Image.asset(
+                        'assets/logo.png',
+                        height: 70,
+                      ),
+                      SizedBox(height: 20),
+                      _buildSectionHeader("PROFİL"),
+                      // Profil Fotoğrafı
+                      CircleAvatar(
+                        radius: 55,
+                        backgroundImage: NetworkImage(
+                          userData!["profilResmiUrl"] ??
+                              "https://via.placeholder.com/150",
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        "${userData!["ad"]} ${userData!["soyad"]}",
+                        style:
+                            TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                      Divider(height: 40, thickness: 1),
+
+                      // Ad ve Soyad kutucukları
                       _buildProfileItem("Ad", userData!["ad"]),
                       _buildProfileItem("Soyad", userData!["soyad"]),
-                      _buildProfileItem("E-posta", userData!["eposta"]),
+
+                      // Grup başlığı
+
                       _buildProfileItem("Telefon", userData!["telefonNumarasi"]),
                       _buildProfileItem("Yaş", userData!["yas"].toString()),
+
+                      // Diğer Bilgiler
+                      _buildProfileItem("E-posta", userData!["eposta"]),
                       _buildProfileItem("Cinsiyet", userData!["cinsiyet"]),
+                      _buildProfileItem(
+                          "Adres", userData!["adres"] ?? "Belirtilmemiş"),
+                      SizedBox(height: 20),
+
+                      // Kaydet Butonu
+                      ElevatedButton(
+                        onPressed: () {
+                          // Kaydetme işlemi
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFA3D9C9),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30)),
+                          padding: EdgeInsets.symmetric(
+                              vertical: 14, horizontal: 32),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          "Kaydet",
+                          style: TextStyle(fontSize: 16, color: Colors.black),
+                        ),
+                      ),
                     ],
                   ),
                 ),
     );
   }
 
+  // Bilgi kutusu widget'ı
   Widget _buildProfileItem(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Text(
-            "$label: ",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(fontSize: 16),
-              overflow: TextOverflow.ellipsis,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        decoration: BoxDecoration(
+          color: Color(0xFFF0F0F0),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Text(
+              "$label: ",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-          ),
-        ],
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(fontSize: 16),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  // Grup başlığı widget'ı
+ // Grup başlığı widget'ı
+Widget _buildSectionHeader(String title) {
+  return Container(
+    width: double.infinity,
+    margin: EdgeInsets.only(top: 20, bottom: 10),
+    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+    child: Text(
+      title,
+      textAlign: TextAlign.center, // Yazıyı ortala
+      style: TextStyle(
+        color: Color(0xFFA3D9C9), // Yazı rengi turkuaz
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
+}
 }
