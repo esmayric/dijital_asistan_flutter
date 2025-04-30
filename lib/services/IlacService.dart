@@ -76,29 +76,30 @@ class IlacService {
   }
 
   // İlaç silme
-  static Future<bool> deleteIlac(int ilacId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+ // İlaç silme
+static Future<bool> deleteIlac(int ilacId) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
 
-    if (token == null) {
-      print("Token bulunamadı!");
-      return false;
-    }
-
-    final response = await http.delete(
-      Uri.parse('$baseUrl/$ilacId'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      print("✅ İlaç başarıyla silindi.");
-      return true;
-    } else {
-      print("İlaç silinemedi! Hata Kodu: ${response.statusCode}");
-      print("Mesaj: ${response.body}");
-      return false;
-    }
+  if (token == null) {
+    print("Token bulunamadı!");
+    return false;
   }
+
+  final response = await http.delete(
+    Uri.parse('$baseUrl/$ilacId'),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode == 200 || response.statusCode == 204) {
+    print("✅ İlaç başarıyla silindi.");
+    return true;
+  } else {
+    print("İlaç silinemedi! Hata Kodu: ${response.statusCode}");
+    print("Mesaj: ${response.body}");
+    return false;
+  }
+}
 }

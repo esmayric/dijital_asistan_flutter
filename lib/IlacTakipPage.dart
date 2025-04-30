@@ -305,7 +305,7 @@ Widget _buildDateBar() {
   return SingleChildScrollView(
     scrollDirection: Axis.horizontal,
     child: Row(
-      children: List.generate(14, (index) {  // İstersen 7 yerine 14 yapıp 2 haftalık da gösterebilirsin
+      children: List.generate(90, (index) {  // İstersen 7 yerine 14 yapıp 2 haftalık da gösterebilirsin
         DateTime day = startOfWeek.add(Duration(days: index));
         bool isSelected = isSameDay(_selectedDay, day);
 
