@@ -27,9 +27,15 @@ dependencies:
   jwt_decoder: ^2.0.1
   shared_preferences: ^2.0.15
   http: ^0.13.6
+  pedometer: ^4.0.0
+  google_fonts: ^4.0.4
+  mime: ^1.0.0
+  dio: ^5.4.0
+
+
 
   table_calendar: ^3.0.9
-  file_picker: ^5.0.1
+  file_picker: ^10.1.2
   cupertino_icons: ^1.0.8
   fl_chart: ^0.70.2
 
@@ -52,3 +58,4 @@ flutter:
    - assets/foodHealthy.jpg
    - assets/balancedMeal.jpg
    - assets/hearthHealthy.jpg
+   - assets/glass.png

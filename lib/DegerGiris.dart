@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/TansiyonGirisEkrani.dart'; // Tansiyon giriş ekranını ekliyoruz
+import 'package:flutter_application_1/TansiyonGirisEkrani.dart';
+import 'package:flutter_application_1/SekerGirisEkrani.dart';
+import 'package:flutter_application_1/KanDegerleriGirisEkrani.dart';
 
 class DegerGiris extends StatelessWidget {
   const DegerGiris({super.key});
@@ -50,30 +52,28 @@ class DegerGiris extends StatelessWidget {
               child: ListView(
                 children: [
                   healthButton(
-                    "KAN DEGERLERI", 
-                    Colors.red[300], 
-                    Icons.bloodtype
+                    "KAN DEGERLERI",
+                    Colors.red[300],
+                    Icons.bloodtype,
+                    context,
                   ),
                   healthButton(
-                    "KALP DEGERLERI", 
-                    Colors.pink[300], 
-                    Icons.favorite
+                    "KALP DEGERLERI",
+                    Colors.pink[300],
+                    Icons.favorite,
+                    context,
                   ),
                   healthButton(
-                    "SEKER DEGERLERI", 
-                    Colors.lightGreen[400], 
-                    Icons.medical_services
+                    "SEKER DEGERLERI",
+                    Colors.lightGreen[400],
+                    Icons.medical_services,
+                    context,
                   ),
                   healthButton(
-                    "TANSIYON DEGERLERI", 
-                    Colors.yellow[600], 
-                    Icons.monitor_heart, 
-                    context
-                  ),
-                  healthButton(
-                    "TAHIL SONUCLARI", 
-                    Colors.orange[300], 
-                    Icons.assignment
+                    "TANSIYON DEGERLERI",
+                    Colors.yellow[600],
+                    Icons.monitor_heart,
+                    context,
                   ),
                 ],
               ),
@@ -84,7 +84,7 @@ class DegerGiris extends StatelessWidget {
     );
   }
 
-  Widget healthButton(String text, Color? color, IconData icon, [BuildContext? context]) {
+  Widget healthButton(String text, Color? color, IconData icon, BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: ElevatedButton(
@@ -96,11 +96,25 @@ class DegerGiris extends StatelessWidget {
           padding: EdgeInsets.symmetric(vertical: 50, horizontal: 30),
         ),
         onPressed: () {
-          if (text == "TANSIYON DEGERLERI" && context != null) {
-            // Tansiyon butonuna tıklanınca Tansiyon Giriş Ekranına geçiş
+          if (text == "TANSIYON DEGERLERI") {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => TansiyonGirisEkrani()),
+            );
+          } else if (text == "SEKER DEGERLERI") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SekerGirisEkrani()),
+            );
+          } else if (text == "KAN DEGERLERI") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => KanDegerleriGirisEkrani()),
+            );
+          } else {
+            // Diğer butonlara bastığında şimdilik snackbar
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("$text ekranı henüz hazır değil 😅")),
             );
           }
         },

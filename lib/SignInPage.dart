@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/SignUpPage.dart';
 import 'package:flutter_application_1/services/AuthService.dart';
 import 'package:flutter_application_1/InfiniteHealthHomePage.dart';
+import 'package:flutter_application_1/ForgotPasswordPage.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({Key? key}) : super(key: key);
@@ -88,19 +89,33 @@ class _SignInPageState extends State<SignInPage> {
             _buildTextField('E-Posta', 'deneme@gmail.com', controller: emailController),
             const SizedBox(height: 12),
             _buildTextField('Şifre', 'sifre123', controller: passwordController, obscureText: true),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+                  );
+                },
+                child: const Text(
+                  'Şifremi Unuttum',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
             const SizedBox(height: 20),
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
                 onPressed: () async {
                   if (_loginFormKey.currentState!.validate()) {
-                    // Kullanıcıdan alınan bilgilerle login işlemi yapılıyor
                     Map<String, dynamic>? response = await AuthService.login(
                       emailController.text,
                       passwordController.text,
                     );
 
-                    // Yanıtın null olmadığı ve token'ın bulunduğu kontrol ediliyor
                     if (response != null && response.containsKey('token')) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -110,15 +125,10 @@ class _SignInPageState extends State<SignInPage> {
                       );
 
                       var userData = response['user'];
-
-                      // Kullanıcı verisi kontrol ediliyor
                       if (userData != null) {
                         String fullName = '${userData['ad']} ${userData['soyad']}';
-                        int userId = userData['kullaniciId'] ?? 0; // Kullanıcı ID'sini doğru al  // Null kontrolü yapılıyor
+                        int userId = userData['kullaniciId'] ?? 0;
 
-                        print('Kullanıcı Verisi: $userData');
-
-                        // Ana sayfaya yönlendirme yapılır
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
@@ -129,7 +139,6 @@ class _SignInPageState extends State<SignInPage> {
                           ),
                         );
                       } else {
-                        // Kullanıcı verisi alınamadığında hata mesajı
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Kullanıcı verisi alınamadı'),
@@ -138,7 +147,6 @@ class _SignInPageState extends State<SignInPage> {
                         );
                       }
                     } else {
-                      // Giriş başarısız olduğunda hata mesajı gösterilir
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Geçersiz kullanıcı adı veya şifre'),

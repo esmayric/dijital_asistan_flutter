@@ -1,39 +1,83 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class TansiyonService {
-  static const String _baseUrl = 'http://localhost:7293/api/Deger';
+  final String _baseUrl = "http://localhost:7293/api/Deger";
 
-  Future<bool> tansiyonVerisiEkle({
-    required int degerTipiId,
-    required Map<String, dynamic> degerListesi,
-    required String tahlilSonuclari,
-    required String token, // token parametre eklendi
-  }) async {
+  Future<List<Map<String, dynamic>>> tansiyonVerileriniGetir(String token) async {
     var url = Uri.parse(_baseUrl);
 
-    Map<String, dynamic> veri = {
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      List<dynamic> veriler = jsonDecode(response.body);
+      List<dynamic> tansiyonVerileri = veriler.where((v) => v['degerTipiId'] == 1).toList();
+
+      return tansiyonVerileri.map<Map<String, dynamic>>((veri) {
+        final degerListesi = veri['degerListesi'];
+        final degerler = degerListesi is String ? jsonDecode(degerListesi) : degerListesi;
+
+        return {
+          'tarih': veri['tarih'],
+          'sistolik': int.tryParse(degerler['sistolik'].toString()) ?? 0,
+          'diyastolik': int.tryParse(degerler['diyastolik'].toString()) ?? 0,
+          'nabiz': int.tryParse(degerler['nabiz'].toString()) ?? 0,
+          'tahlilSonuclari': _cozSonucu(veri['tahlilSonuclari']),
+        };
+      }).toList();
+    } else {
+      print('Veri alınamadı: ${response.statusCode}, ${response.body}');
+      return [];
+    }
+  }
+
+  Future<bool> tansiyonVerisiEkle({
+  required int degerTipiId,
+  required Map<String, dynamic> degerListesi,
+  required String tahlilSonuclari,
+  required String token,
+}) async {
+  var url = Uri.parse("http://localhost:7293/api/Deger/ekle"); 
+
+  var response = await http.post(
+    url,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({
       'degerTipiId': degerTipiId,
-      'degerListesi': jsonEncode(degerListesi),
+      'degerListesi': jsonEncode(degerListesi), // <<< JSON string olarak gönder
       'tahlilSonuclari': tahlilSonuclari,
       'tarih': DateTime.now().toIso8601String(),
-    };
+      'olcumZamani': null,
+      'toklukDurumu': null,
+    }),
+  );
 
-    var response = await http.post(
-       url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token', // Token burada ekleniyor
-      },
-      body: jsonEncode(veri),
-    );
+  if (response.statusCode == 200 || response.statusCode == 201) {
+    print('Veri başarıyla kaydedildi');
+    return true;
+  } else {
+    print('Hata: ${response.statusCode}, ${response.body}');
+    return false;
+  }
+}
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print('Veri başarıyla kaydedildi');
-      return true;
-    } else {
-      print('Hata: ${response.statusCode}, ${response.body}');
-      return false;
+  String _cozSonucu(dynamic veri) {
+    if (veri == null) return "";
+    try {
+      final decoded = jsonDecode(veri);
+      if (decoded is Map<String, dynamic>) {
+        return decoded['sonuc'] ?? decoded.values.join(", ");
+      }
+      return decoded.toString();
+    } catch (e) {
+      return veri.toString();
     }
   }
 }

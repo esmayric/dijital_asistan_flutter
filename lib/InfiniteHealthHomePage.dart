@@ -1,11 +1,15 @@
+// ignore_for_file: use_key_in_widget_constructors, prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'AppointmentScreen.dart';
 import 'DegerGiris.dart';
 import 'TahlilSonuclari.dart';
 import 'IlacTakipPage.dart';
 import 'MakalePage.dart';
-import 'UserProfileScreen.dart';  // UserProfileScreen sayfasını import et
-
+import 'UserProfileScreen.dart';
+import 'package:pedometer/pedometer.dart';
+import 'RutinlerPage.dart';
+import 'besin_page.dart';
 class InfiniteHealthHomePage extends StatefulWidget {
   final String userName;
   final int userId;
@@ -21,7 +25,7 @@ class InfiniteHealthHomePage extends StatefulWidget {
 }
 
 class _InfiniteHealthHomePageState extends State<InfiniteHealthHomePage> {
-  int waterCount = 0;
+  double waterCount = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -41,13 +45,10 @@ class _InfiniteHealthHomePageState extends State<InfiniteHealthHomePage> {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      // Profil resmine tıklanınca UserProfileScreen'e git
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => UserProfileScreen(
-                            userId: widget.userId,
-                            ),
+                          builder: (context) => UserProfileScreen(userId: widget.userId),
                         ),
                       );
                     },
@@ -215,14 +216,25 @@ class _InfiniteHealthHomePageState extends State<InfiniteHealthHomePage> {
                   Expanded(
                     child: Column(
                       children: [
-                        const Text(
-                          'SU TAKİBİ',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 24,
-                            color: Color(0xFF9FC9E9),
-                          ),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.local_drink,
+                              size: 30,
+                              color: Color(0xFF9FC9E9),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'SU TAKİBİ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 24,
+                                color: Color(0xFF9FC9E9),
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 10),
                         Container(
                           width: double.infinity,
                           height: 220,
@@ -247,31 +259,22 @@ class _InfiniteHealthHomePageState extends State<InfiniteHealthHomePage> {
                                 style: TextStyle(color: Colors.white),
                               ),
                               const SizedBox(height: 10),
-                              LinearProgressIndicator(
-                                value: (waterCount / 8).clamp(0.0, 1.0),
-                                minHeight: 8,
-                                backgroundColor: Colors.white.withOpacity(0.3),
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              const SizedBox(height: 10),
                               Center(
                                 child: Column(
                                   children: [
                                     Text(
-                                      '$waterCount / 8 bardak',
+                                      'Toplam: ${waterCount.toStringAsFixed(2)} Litre',
                                       style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold),
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                     const SizedBox(height: 6),
                                     ElevatedButton(
                                       onPressed: () {
                                         setState(() {
-                                          if (waterCount < 8) {
-                                            waterCount++;
-                                          }
+                                          waterCount += 0.25;
                                         });
                                       },
                                       style: ElevatedButton.styleFrom(
@@ -281,7 +284,7 @@ class _InfiniteHealthHomePageState extends State<InfiniteHealthHomePage> {
                                           borderRadius: BorderRadius.circular(20),
                                         ),
                                       ),
-                                      child: const Text('+1 Bardak Ekle'),
+                                      child: const Text('+0.25 Litre Ekle'),
                                     ),
                                   ],
                                 ),
@@ -307,10 +310,14 @@ class _InfiniteHealthHomePageState extends State<InfiniteHealthHomePage> {
                             color: Color(0xFFE2D46B),
                           ),
                         ),
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
+                        StreamBuilder<StepCount>(
+                          stream: Pedometer.stepCountStream,
+                          builder: (context, snapshot) {
+                            int adimSayisi = snapshot.hasData ? snapshot.data!.steps : 0;
+                            double hedefAdim = 8000;
+                            double progress = (adimSayisi / hedefAdim).clamp(0.0, 1.0);
+
+                            return Container(
                               width: double.infinity,
                               height: 150,
                               padding: const EdgeInsets.all(12),
@@ -322,39 +329,30 @@ class _InfiniteHealthHomePageState extends State<InfiniteHealthHomePage> {
                                 ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Column(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text('Bugün', style: TextStyle(color: Colors.white)),
-                                  Text('4973',
-                                      style: TextStyle(
-                                          fontSize: 28,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white)),
-                                  Text('adım attınız.',
-                                      style: TextStyle(color: Colors.white)),
-                                  SizedBox(height: 10),
+                                  const Text('Bugün', style: TextStyle(color: Colors.white)),
+                                  Text(
+                                    '$adimSayisi',
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const Text('adım attınız.', style: TextStyle(color: Colors.white)),
+                                  const SizedBox(height: 10),
                                   LinearProgressIndicator(
-                                    value: 0.65,
+                                    value: progress,
                                     minHeight: 8,
                                     backgroundColor: Colors.white30,
                                     color: Colors.white,
                                   ),
                                 ],
                               ),
-                            ),
-                            Positioned(
-                              bottom: -140,
-                              left: 0,
-                              right: 0,
-                              child: Center(
-                                child: Image.asset(
-                                  'assets/footprint.png',
-                                  width: 280,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -365,44 +363,53 @@ class _InfiniteHealthHomePageState extends State<InfiniteHealthHomePage> {
 
             const SizedBox(height: 24),
 
-            // BUTONLAR
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                alignment: WrapAlignment.center,
-                children: [
-                  _menuButton('İLAÇ TAKİP', Icons.medical_services, () {
-                    Navigator.push(context,
-    MaterialPageRoute(
-      builder: (context) => 
-      IlacTakipPage(userId: widget.userId)
-    )
-  );
-}),
-
-
-                  _menuButton('DEĞER GİRİŞ', Icons.bar_chart, () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => DegerGiris()));
-                  }),
-                  _menuButton('TAHLİL SONUÇLARI', Icons.list_alt, () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => TahlilSonuclari()));
-                  }),
-                  _menuButton('RANDEVU', Icons.calendar_month, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            AppointmentScreen(userId: widget.userId),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
+            // MENÜ BUTONLARI
+Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 16),
+  child: Wrap(
+    spacing: 16,
+    runSpacing: 16,
+    alignment: WrapAlignment.center,
+    children: [
+      _menuButton('İLAÇ TAKİP', Icons.medical_services, () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => IlacTakipPage(userId: widget.userId)),
+        );
+      }),
+      _menuButton('DEĞER GİRİŞ', Icons.bar_chart, () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => DegerGiris()),
+        );
+      }),
+      _menuButton('TAHLİL SONUÇLARI', Icons.list_alt, () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => TahlilSonuclari()),
+        );
+      }),
+      _menuButton('RANDEVU', Icons.calendar_month, () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AppointmentScreen(userId: widget.userId)),
+        );
+      }),
+      _menuButton('HAFTALIK RUTİNLER', Icons.repeat, () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => RutinlerPage(userId: widget.userId)), // Burayı kendi sayfana göre ayarla
+        );
+      }),
+      _menuButton('Besin Öneri', Icons.bar_chart, () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => BesinPage(userId: widget.userId)),
+        );
+      }),
+    ],
+  ),
+),
 
             const SizedBox(height: 100),
           ],

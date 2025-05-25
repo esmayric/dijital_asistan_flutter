@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/main.dart'; // MyHomePage'e geçmek için
 
 class SplashLogoPage extends StatefulWidget {
   @override
@@ -16,7 +15,7 @@ class _SplashLogoPageState extends State<SplashLogoPage> {
     Timer(Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => MyHomePage()),
+        MaterialPageRoute(builder: (context) => MyHomePage()), // Burada MyHomePage'e yönlendiriyorsun
       );
     });
   }
@@ -24,14 +23,25 @@ class _SplashLogoPageState extends State<SplashLogoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Arka plan beyaz
+      backgroundColor: Colors.white,
       body: Center(
         child: Image.asset(
-          'assets/logo.png', // 👈 Logonu assets klasörüne koymayı unutma
+          'assets/logo.png', // Logonun assets klasörüne koymayı unutma
           width: 200,
           height: 200,
         ),
       ),
+    );
+  }
+}
+
+// MyHomePage widget'ı burada tanımlanıyor
+class MyHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Ana Sayfa')),
+      body: Center(child: Text('Ana Sayfa İçeriği')),
     );
   }
 }

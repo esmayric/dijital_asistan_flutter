@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/DegerGiris.dart';
 import 'package:flutter_application_1/IlacTakipPage.dart';
-import 'package:flutter_application_1/BeslenmeTakipPage.dart';
+import 'package:flutter_application_1/besin_page.dart';
 import 'package:flutter_application_1/TahlilSonuclari.dart';
 import 'package:flutter_application_1/AppointmentScreen.dart';
 import 'package:flutter_application_1/SignInPage.dart';
