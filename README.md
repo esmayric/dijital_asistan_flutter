@@ -1,4 +1,4 @@
-# Dijital Asistan Flutter Uygulaması
+# Dijital Asistan ile Kronik Hastalık ve Yaşlı Bakımı Yönetim Platformu
 
 Bu mobil uygulama, kronik hastalık ve yaşlı bireylerin günlük sağlık takibini kolaylaştırmak amacıyla geliştirilmiştir. Kullanıcı dostu arayüzü sayesinde sağlık verilerinin takibi, adım sayısı, beslenme önerileri ve acil durum bilgilerinin yönetimi gibi birçok özelliği bir araya getirir.
 
