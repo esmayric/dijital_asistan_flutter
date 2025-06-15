@@ -375,49 +375,103 @@ Widget _buildTansiyonGrafikleri() {
     ),
   );
 }
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Tansiyon Takibi"),
-        backgroundColor: const Color(0xFF00BFAE),
-        foregroundColor: Colors.white,
-        centerTitle: true,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildInput("Sistolik (büyük tansiyon)", _sistolikController),
-                    _buildInput("Diyastolik (küçük tansiyon)", _diyastolikController),
-                    _buildInput("Nabız", _nabizController),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: tansiyonVerisiniGonder,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00BFAE),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 12),
-                      ),
-                      child: const Text("Verileri Gönder",
-                          style: TextStyle(fontSize: 16)),
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.white,
+    appBar: AppBar(
+      backgroundColor: Colors.yellow[600],
+      elevation: 0,
+    ),
+    body: _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 20),
+                  // ↓↓↓ LOGO VE BAŞLIK
+                  Center(
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          "assets/logo.png",
+                          height: 80,
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          "TANSİYON TAKİBİ",
+                          style: TextStyle(
+                            color: Colors.teal,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                    _buildTansiyonGrafikleri(),
-                    const SizedBox(height: 20),
-                    _buildTansiyonTablosu(),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // ↓↓↓ ARAMA KUTUSU
+                  TextField(
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search, color: Colors.teal),
+                      hintText: "Ara...",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[200],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ↓↓↓ TANSİYON FORMU
+                  _buildInput("Büyük tansiyon", _sistolikController),
+                  _buildInput("Küçük tansiyon", _diyastolikController),
+                  _buildInput("Nabız", _nabizController),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: tansiyonVerisiniGonder,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.yellow[700],
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                    ),
+                    child: const Text("Verileri Gönder",
+                        style: TextStyle(fontSize: 16)),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                      " Kayıtlı Veriler",
+                        style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold, color: Colors.amber)),
+                        Center(
+                          child: SizedBox(
+                            width: 320, // ← Genişlik burada belirleniyor
+                            child: Divider(
+                              thickness: 2,
+                              color: Colors.yellow[600],
+                            ),
+                          ),
+                        ),
+                  // ↓↓↓ GRAFİK VE TABLO
+                  _buildTansiyonGrafikleri(),
+                  const SizedBox(height: 20),
+                  _buildTansiyonTablosu(),
+            
+                ],
               ),
             ),
-    );
-  }
+          ),
+  );
+}
+
 }

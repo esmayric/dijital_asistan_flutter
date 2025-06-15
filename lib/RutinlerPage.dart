@@ -58,34 +58,65 @@ class _RutinlerPageState extends State<RutinlerPage> {
                   return ListView(
                     controller: scrollController,
                     children: [
-                      const Text("Rutin Ekle", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_month, color: Colors.red, size: 28),
+                          const SizedBox(width: 8),
+                          const Text("Yeni Rutin", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
                       TextField(
                         controller: _baslikController,
-                        decoration: const InputDecoration(labelText: 'Başlık'),
+                        decoration: const InputDecoration(
+                          labelText: 'Başlık',
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                       const SizedBox(height: 16),
-                      DropdownButton<int>(
-                        value: _selectedGun,
-                        isExpanded: true,
-                        onChanged: (value) {
-                          setModalState(() => _selectedGun = value ?? 1);
-                        },
-                        items: List.generate(7, (i) {
-                          const gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-                          return DropdownMenuItem(value: i + 1, child: Text(gunler[i]));
-                        }),
+                      InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: "Gün Seç",
+                          border: OutlineInputBorder(),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
+                            value: _selectedGun,
+                            isExpanded: true,
+                            onChanged: (value) {
+                              setModalState(() => _selectedGun = value ?? 1);
+                            },
+                            items: List.generate(7, (i) {
+                              const gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+                              return DropdownMenuItem(value: i + 1, child: Text(gunler[i]));
+                            }),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 16),
-                      TextButton(
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Colors.teal,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
                         onPressed: () async {
                           final picked = await showTimePicker(context: context, initialTime: _selectedTime);
                           if (picked != null) setModalState(() => _selectedTime = picked);
                         },
-                        child: Text("Saat Seç: ${_selectedTime.format(context)}"),
+                        icon: const Icon(Icons.access_time),
+                        label: Text("Saat Seç: ${_selectedTime.format(context)}"),
                       ),
                       const SizedBox(height: 16),
-                      ElevatedButton(
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.add),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Colors.teal,
+                          foregroundColor: Colors.white, 
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
                         onPressed: () async {
                           if (_baslikController.text.trim().isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -93,24 +124,30 @@ class _RutinlerPageState extends State<RutinlerPage> {
                             );
                             return;
                           }
+
                           String formattedTime = "${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}";
+
                           final success = await HatirlaticiService.addHatirlatici(
                             baslik: _baslikController.text.trim(),
                             gun: _selectedGun,
                             saat: formattedTime,
                             tamamlandiMi: false,
                           );
+
                           if (success) {
                             Navigator.pop(context);
                             fetchRutinler();
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Rutin eklendi!')));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('✅ Rutin eklendi!')),
+                            );
                           } else {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Eklenemedi.')));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('❌ Eklenemedi.')),
+                            );
                           }
                         },
-                        child: const Text("Ekle"),
+                        label: const Text("Rutin Ekle"),
                       ),
-                      const SizedBox(height: 24),
                     ],
                   );
                 },
@@ -126,7 +163,7 @@ class _RutinlerPageState extends State<RutinlerPage> {
     final success = await HatirlaticiService.deleteHatirlatici(rutinId);
     if (success) {
       fetchRutinler();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🗑️ Rutin silindi.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🗑 Rutin silindi.')));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Silinemedi.')));
     }
@@ -142,88 +179,141 @@ class _RutinlerPageState extends State<RutinlerPage> {
   }
 
   Widget buildRutinCard(Map<String, dynamic> rutin) {
-  const gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-
-  int? gunIndex;
-  if (rutin['gun'] is int) {
-    gunIndex = rutin['gun'];
-  } else if (rutin['gun'] is String) {
-    gunIndex = int.tryParse(rutin['gun']);
-  }
-
-  String gunStr = (gunIndex != null && gunIndex >= 1 && gunIndex <= 7)
-      ? gunler[gunIndex - 1]
-      : 'Bilinmeyen Gün';
-
-  final rutinId = rutin['rutinId'];
-  final bool tamamlandi = rutin['tamamlandiMi'] == true;
-
-  final TextStyle titleStyle = tamamlandi
-      ? const TextStyle(
-          fontWeight: FontWeight.bold,
-          decoration: TextDecoration.lineThrough,
-          color: Colors.grey,
-        )
-      : const TextStyle(fontWeight: FontWeight.bold);
-
-  final TextStyle subtitleStyle = tamamlandi
-      ? const TextStyle(
-          decoration: TextDecoration.lineThrough,
-          color: Colors.grey,
-        )
-      : const TextStyle();
-
-  return Card(
-    elevation: 4,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    child: ListTile(
-      leading: Checkbox(
-        value: tamamlandi,
-        onChanged: (bool? value) {
-          if (rutinId != null && rutinId is int && value != null) {
-            toggleTamamlandiMi(rutinId, value);
-          }
-        },
+    const gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+    int? gunIndex;
+    if (rutin['gun'] is int) {
+      gunIndex = rutin['gun'];
+    } else if (rutin['gun'] is String) {
+      gunIndex = int.tryParse(rutin['gun']);
+    }
+    Widget customCheckbox({
+  required bool value,
+  required void Function(bool) onChanged,
+}) {
+  return InkWell(
+    onTap: () => onChanged(!value),
+    borderRadius: BorderRadius.circular(4),
+    child: Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(4),
+        color: value ? Colors.white : Colors.transparent,
       ),
-      title: Text(rutin['baslik'] ?? 'Başlık yok', style: titleStyle),
-      subtitle: Text('Gün: $gunStr - Saat: ${rutin['saat'] ?? ''}', style: subtitleStyle),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete, color: Colors.red),
-        onPressed: () {
-          if (rutinId != null && rutinId is int) {
-            deleteRutin(rutinId);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('❌ Silinemedi: Rutin ID null veya geçersiz.')),
-            );
-          }
-        },
-      ),
+      child: value
+          ? const Icon(Icons.check, size: 20, color: Colors.red) // 🔴 Tikin rengi kırmızı
+          : null,
     ),
   );
 }
+
+
+    String gunStr = (gunIndex != null && gunIndex >= 1 && gunIndex <= 7)
+        ? gunler[gunIndex - 1]
+        : 'Bilinmeyen Gün';
+
+    final rutinId = rutin['rutinId'];
+    final bool tamamlandi = rutin['tamamlandiMi'] == true;
+
+    final TextStyle titleStyle = tamamlandi
+        ? const TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.lineThrough, color: Colors.grey)
+        : const TextStyle(fontWeight: FontWeight.bold);
+
+    final TextStyle subtitleStyle = tamamlandi
+        ? const TextStyle(decoration: TextDecoration.lineThrough, color: Colors.grey)
+        : const TextStyle();
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: const Color.fromARGB(255, 233, 247, 244),
+      child: ListTile(
+       leading: customCheckbox(
+  value: tamamlandi,
+  onChanged: (bool value) {
+    if (rutinId != null) {
+      toggleTamamlandiMi(rutinId, value);
+    }
+  },
+),
+
+        title: Text(rutin['baslik'] ?? 'Başlık yok', style: titleStyle),
+       subtitle: Text(
+          '🗓️ $gunStr   ⏰ ${rutin['saat'] ?? ''}',
+          style: TextStyle(
+            color: tamamlandi ? Colors.grey : Colors.black54,
+            decoration: tamamlandi ? TextDecoration.lineThrough : null,
+          ),
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: () {
+            if (rutinId != null) {
+              deleteRutin(rutinId);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Haftalık Rutinler'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: const Color(0xFF94D9C6),
+        elevation: 0,
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : rutinler.isEmpty
-              ? const Center(child: Text('Henüz rutininiz yok...'))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: rutinler.length,
-                  itemBuilder: (context, index) {
-                    return buildRutinCard(rutinler[index]);
-                  },
+      body: Column(
+        children: [
+          Center(
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Image.asset("assets/logo.png", height: 80),
+                const SizedBox(height: 10),
+                const Text(
+                  "HAFTALIK RUTİNLER",
+                  style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontSize: 22),
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search, color: Colors.teal),
+              hintText: "Ara...",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
+              ),
+              filled: true,
+              fillColor: Colors.grey[200],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : rutinler.isEmpty
+                    ? const Center(child: Text('Henüz rutininiz yok...'))
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: rutinler.length,
+                        itemBuilder: (context, index) {
+                          return buildRutinCard(rutinler[index]);
+                        },
+                      ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: showAddRutinDialog,
+        backgroundColor: const Color(0xFF94D9C6),
         child: const Icon(Icons.add),
-        backgroundColor: Colors.deepPurple,
       ),
     );
   }

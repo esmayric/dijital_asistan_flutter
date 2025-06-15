@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:convert';
-import 'package:flutter_application_1/services/seker_service.dart';
+import '../services/seker_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SekerGirisEkrani extends StatefulWidget {
@@ -184,6 +184,7 @@ class _SekerGirisEkraniState extends State<SekerGirisEkrani> {
   }
 Widget _buildOlcumGecmisiKart() {
   return Card(
+    color: Colors.grey[50],
     elevation: 8, // Gölge ekleyerek derinlik hissi veriyoruz
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(16), // Kenarları yuvarlatıyoruz
@@ -191,18 +192,11 @@ Widget _buildOlcumGecmisiKart() {
     margin: const EdgeInsets.symmetric(vertical: 12), // Kartlar arasındaki boşluk
     child: Padding(
       padding: const EdgeInsets.all(16.0),
+      
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Ölçüm Geçmişi",
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.teal, // Başlık rengi
-            ),
-          ),
-          const SizedBox(height: 12),
+          
           _buildTablo(), // Tabloyu burada yerleştiriyoruz
         ],
       ),
@@ -274,25 +268,56 @@ Widget _buildOlcumGecmisiKart() {
 @override
 Widget build(BuildContext context) {
   return Scaffold(
+    backgroundColor: Colors.white,
     appBar: AppBar(
-  title: Text(
-    "Şeker Takibi",
-    style: GoogleFonts.poppins(
-      fontWeight: FontWeight.w600,
-      color: Colors.white, // <-- BU SATIRI EKLEYİN
+      backgroundColor: Colors.lightGreen[400],
+      elevation: 0,
     ),
-  ),
-  centerTitle: true,
-  backgroundColor: Colors.teal,
-),
     body: Container(
-      color: Colors.grey[100],
       padding: const EdgeInsets.all(16.0),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // ↓↓↓ LOGO VE BAŞLIK ALANI
+            Center(
+              child: Column(
+                children: [
+                  Image.asset(
+                    "assets/logo.png",
+                    height: 80,
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "ŞEKER DEĞERLERİ",
+                    style: TextStyle(
+                      color: Colors.teal,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            // ↓↓↓ ARAMA KUTUSU
+            TextField(
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search, color: Colors.teal),
+                hintText: "Ara...",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Colors.grey[200],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // ↓↓↓ GLUKOZ GİRİŞİ FORMU
             Card(
+              color: Colors.grey[50],
               elevation: 6,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
@@ -302,7 +327,8 @@ Widget build(BuildContext context) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Glukoz Girişi", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+                      
+                      Text("Glukoz Girişi", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.lightGreen[700])),
                       const SizedBox(height: 12),
                       _buildInput(),
                       const SizedBox(height: 12),
@@ -311,35 +337,47 @@ Widget build(BuildContext context) {
                       _buildToklukDurumuDropdown(),
                       const SizedBox(height: 20),
                       SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              onPressed: _veriGonder,
-                              child: const Text(
-                                "Kaydet",
-                                style: TextStyle(color: Colors.white), // <-- YAZI RENGİNİ BEYAZ YAPTIK
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.lightGreen[400],
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: _veriGonder,
+                          child: const Text(
+                            "Kaydet",
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
-                      ),
                       )
                     ],
                   ),
                 ),
               ),
             ),
+
             const SizedBox(height: 24),
+           
             if (_isLoading)
               const Center(child: CircularProgressIndicator())
             else ...[
               Text(
-                "Son 7 Günlük Glukoz Grafiği",
-                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+                " Son 7 Günlük Glukoz Grafiği",
+                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.lightGreen[700]),
               ),
-              const SizedBox(height: 12),
+               Center(
+              child: SizedBox(
+                width: 320, // ← Genişlik burada belirleniyor
+                child: Divider(
+                  thickness: 2,
+                  color: Colors.lightGreen[400],
+                ),
+              ),
+            ),
+              const SizedBox(height: 8),
               Card(
                 elevation: 4,
+                color: Colors.grey[50],
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
@@ -347,8 +385,24 @@ Widget build(BuildContext context) {
                 ),
               ),
               const SizedBox(height: 24),
-              _buildOlcumGecmisiKart(), // Burada yeni kartı kullanıyoruz
-              
+              Text(
+            " Ölçüm Geçmişi",
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.lightGreen[700], // Başlık rengi
+            ),
+          ),
+               Center(
+              child: SizedBox(
+                width: 320, // ← Genişlik burada belirleniyor
+                child: Divider(
+                  thickness: 2,
+                  color: Colors.lightGreen[400],
+                ),
+              ),
+            ),
+              _buildOlcumGecmisiKart(),
             ],
           ],
         ),

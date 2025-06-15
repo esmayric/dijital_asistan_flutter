@@ -1,16 +1,18 @@
-import 'dart:io';
+import 'dart:convert';
+import 'dart:io' show File;
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
-import 'dart:convert';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class TahlilService {
-  static const String baseUrl = 'http://localhost:7293';
+  static const String baseUrl = 'http://192.168.1.3:5000';
 
-  /// PDF dosyasını backend'e yükler ve rapor cevabını JSON olarak döner.
-  static Future<Map<String, dynamic>?> raporYukle(File pdfFile) async {
+  /// PDF dosyası yükleme - Web ve Mobil destekli
+  static Future<Map<String, dynamic>?> raporYukle(dynamic fileOrBytes, {String? fileName}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
@@ -21,18 +23,42 @@ class TahlilService {
       }
 
       final uri = Uri.parse('$baseUrl/api/Rapor/yukle');
-      final mimeType = lookupMimeType(pdfFile.path) ?? 'application/pdf';
-      final mediaType = MediaType.parse(mimeType);
-
-      var request = http.MultipartRequest('POST', uri);
+      final request = http.MultipartRequest('POST', uri);
       request.headers['Authorization'] = 'Bearer $token';
 
-      request.files.add(await http.MultipartFile.fromPath(
-        'file',
-        pdfFile.path,
-        contentType: mediaType,
-        filename: basename(pdfFile.path),
-      ));
+      if (kIsWeb) {
+        // Web: bytes + filename ile gönder
+        if (fileOrBytes is Uint8List && fileName != null) {
+          final mimeType = lookupMimeType(fileName) ?? 'application/pdf';
+          final mediaType = MediaType.parse(mimeType);
+
+          request.files.add(http.MultipartFile.fromBytes(
+            'file',
+            fileOrBytes,
+            filename: fileName,
+            contentType: mediaType,
+          ));
+        } else {
+          print("⚠️ Web ortamında geçersiz dosya verisi.");
+          return null;
+        }
+      } else {
+        // Mobil: File tipiyle gönder
+        if (fileOrBytes is File) {
+          final mimeType = lookupMimeType(fileOrBytes.path) ?? 'application/pdf';
+          final mediaType = MediaType.parse(mimeType);
+
+          request.files.add(await http.MultipartFile.fromPath(
+            'file',
+            fileOrBytes.path,
+            contentType: mediaType,
+            filename: basename(fileOrBytes.path),
+          ));
+        } else {
+          print("⚠️ Mobil ortamda geçersiz dosya tipi.");
+          return null;
+        }
+      }
 
       final streamedResponse = await request.send();
       final responseString = await streamedResponse.stream.bytesToString();
@@ -51,7 +77,7 @@ class TahlilService {
     }
   }
 
-  /// Kullanıcının yüklediği tüm raporları backend'den çeker.
+  /// Tahlil listesi çekme
   static Future<List<dynamic>?> raporListele() async {
     try {
       final prefs = await SharedPreferences.getInstance();

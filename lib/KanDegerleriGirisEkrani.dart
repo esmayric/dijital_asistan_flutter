@@ -213,19 +213,50 @@ class _KanDegerleriGirisEkraniState extends State<KanDegerleriGirisEkrani> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("Kan Değeri Takibi", style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: Colors.black)),
-        centerTitle: true,
-        backgroundColor: Colors.teal[100],
-        elevation: 2,
-      ),
+        backgroundColor:Colors.red[200]
+        ),
       body: Container(
-        color: Colors.grey[100],
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: ListView(
+          child: Column(
+          children: [
+            const SizedBox(height: 20),
+            Center(
+              child: Column(
+                children: [
+                  Image.asset(
+                    "assets/logo.png",
+                    height: 80,
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "KAN DEĞERLERİ",
+                    style: TextStyle(
+                      color: Colors.teal,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.search, color: Colors.teal),
+                hintText: "Ara...",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Colors.grey[200],
+              ),
+            ),
+            const SizedBox(height:20),
+            Expanded(child: ListView(
               children: [
                 _buildInput("Değer Listesi (Kan Değeri)", _degerListesiController),
                 _buildInput("Tahlil Sonuçları (Takip Edilen Hastalık)", _tahlilSonuclariController),
@@ -233,7 +264,7 @@ class _KanDegerleriGirisEkraniState extends State<KanDegerleriGirisEkrani> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal[300],
+                    backgroundColor: Colors.red[300],
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -243,11 +274,22 @@ class _KanDegerleriGirisEkraniState extends State<KanDegerleriGirisEkrani> {
                   child: Text("Veri Gönder", style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: Colors.white)),
                 ),
                 const SizedBox(height: 20),
-                Text("Notlar", style: GoogleFonts.roboto(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal[700])),
-                const SizedBox(height: 12),
+                Text(" Notlar", style: GoogleFonts.roboto(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red[700])),
+                Center(
+                  child: SizedBox(
+                    width: 320, // ← Genişlik burada belirleniyor
+                    child: Divider(
+                      thickness: 2,
+                      color: Colors.red[700],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
                 ..._notlar.map((not) => _buildNotKagidi(not)).toList(),
               ],
             ),
+            )
+          ],
           ),
         ),
       ),

@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class SekerService {
-  final String _baseUrl = "http://192.168.1.3:5000/api/Deger";
+class KalpService {
+  final String _baseUrl = "http://192.168.1.35:5000/api/Deger";
 
-  Future<List<Map<String, dynamic>>> sekerVerileriniGetir(String token) async {
+  Future<List<Map<String, dynamic>>> kalpVerileriniGetir(String token) async {
     var url = Uri.parse(_baseUrl);
 
     var response = await http.get(
@@ -16,35 +16,38 @@ class SekerService {
 
     if (response.statusCode == 200) {
       List<dynamic> veriler = jsonDecode(response.body);
-      List<dynamic> sekerVerileri = veriler.where((v) => v['degerTipiId'] == 2).toList();
+      List<dynamic> kalpVerileri =
+          veriler.where((v) => v['degerTipiId'] == 4).toList();
 
-      return sekerVerileri.map<Map<String, dynamic>>((veri) {
+      return kalpVerileri.map<Map<String, dynamic>>((veri) {
         final degerListesi = veri['degerListesi'];
-        final degerler = degerListesi is String ? jsonDecode(degerListesi) : degerListesi;
+        final degerler =
+            degerListesi is String ? jsonDecode(degerListesi) : degerListesi;
 
         return {
           'tarih': veri['tarih'],
-          'glukoz': int.tryParse(degerler['glukoz'].toString()) ?? 0,
+          'nabiz': (int.tryParse(degerler['nabiz']?.toString() ?? '0') ?? 0) + 400,
+          'oksijen':
+              double.tryParse(degerler['oksijen']?.toString() ?? '0.0') ?? 0.0,
+          'ritim': (degerler['ritim'] ?? ''),
           'tahlilSonuclari': _cozSonucu(veri['tahlilSonuclari']),
-          'olcumZamani': veri['olcumZamani'] ?? '',
-          'toklukDurumu': veri['toklukDurumu'] ?? '',
+          'olcumZamani': veri['olcumZamani'],
         };
       }).toList();
     } else {
-      print('Veri alınamadı: \${response.statusCode}, \${response.body}');
+      print('Veri alınamadı: ${response.statusCode}, ${response.body}');
       return [];
     }
   }
 
-  Future<bool> sekerVerisiEkle({
+  Future<bool> kalpVerisiEkle({
     required int degerTipiId,
     required Map<String, dynamic> degerListesi,
     required String tahlilSonuclari,
     required String token,
-    required String olcumZamani,
-    required String? toklukDurumu,
+    String? olcumZamani,
   }) async {
-    var url = Uri.parse("http://192.168.1.3:5000/api/Deger/ekle");
+    var url = Uri.parse("$_baseUrl/ekle");
 
     var response = await http.post(
       url,
@@ -58,15 +61,14 @@ class SekerService {
         'tahlilSonuclari': tahlilSonuclari,
         'tarih': DateTime.now().toIso8601String(),
         'olcumZamani': olcumZamani,
-        'toklukDurumu': toklukDurumu,
       }),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      print('Şeker verisi başarıyla kaydedildi');
+      print('Kalp verisi başarıyla kaydedildi');
       return true;
     } else {
-      print('Hata: \${response.statusCode}, \${response.body}');
+      print('Hata: ${response.statusCode}, ${response.body}');
       return false;
     }
   }

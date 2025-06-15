@@ -87,7 +87,26 @@ class _SignUpPageState extends State<SignUpPage> {
               ],
             ),
             const SizedBox(height: 12),
-            _buildTextField('Telefon Numarası', '0551 182 9510', controller: _telefonController),
+            TextFormField(
+  controller: _telefonController,
+  keyboardType: TextInputType.phone,
+  style: const TextStyle(color: Colors.white),
+  autovalidateMode: AutovalidateMode.onUserInteraction,
+  decoration: _inputDecoration('Telefon Numarası').copyWith(hintText: '0551 182 9510'),
+  validator: (value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Telefon numarası gerekli';
+    }
+
+    final pattern = RegExp(r'^0?5\d{9}$'); // 05XXXXXXXXX veya 5XXXXXXXXX
+    if (!pattern.hasMatch(value.replaceAll(' ', ''))) {
+      return 'Geçerli bir telefon numarası giriniz (örn. 05551234567)';
+    }
+
+    return null;
+  },
+),
+
             const SizedBox(height: 12),
             Row(
               children: [
@@ -186,6 +205,12 @@ onPressed: () async {
         if (label == 'Şifre' && value.length < 6) {
           return 'Şifre en az 6 karakter olmalıdır';
         }
+        if (label == 'E-Posta') {
+    final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Geçerli bir e-posta adresi giriniz';
+    }
+  }
         return null;
       },
     );

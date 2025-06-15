@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HatirlaticiService {
-  static const String baseUrl = 'http://localhost:7293/api/Hatirlatici';
+  static const String baseUrl = 'http://192.168.1.3:5000/api/Hatirlatici';
 
   // 🔄 Hatırlatıcıları getir
   static Future<List<Map<String, dynamic>>> getHatirlaticilar() async {

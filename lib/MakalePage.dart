@@ -7,7 +7,10 @@ class MakalePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      
+      appBar: AppBar(
+        backgroundColor:Color(0xFF94D9C6),
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

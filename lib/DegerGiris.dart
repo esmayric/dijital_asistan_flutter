@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/TansiyonGirisEkrani.dart';
 import 'package:flutter_application_1/SekerGirisEkrani.dart';
-import 'package:flutter_application_1/KanDegerleriGirisEkrani.dart';
+import 'package:flutter_application_1/KanDegerleriGirisEkrani.dart'; 
+import 'package:flutter_application_1/HeartRatePage.dart';
 
 class DegerGiris extends StatelessWidget {
   const DegerGiris({super.key});
@@ -10,11 +11,15 @@ class DegerGiris extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor:Color(0xFF94D9C6),
+        elevation: 0,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const SizedBox(height: 50),
+            const SizedBox(height: 20),
             Center(
               child: Column(
                 children: [
@@ -24,7 +29,7 @@ class DegerGiris extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    "DEGER GIRIS",
+                    "DEĞER GİRİŞ",
                     style: TextStyle(
                       color: Colors.teal,
                       fontWeight: FontWeight.bold,
@@ -52,28 +57,32 @@ class DegerGiris extends StatelessWidget {
               child: ListView(
                 children: [
                   healthButton(
-                    "KAN DEGERLERI",
+                    context,
+                    "KAN DEĞERLERİ",
                     Colors.red[300],
                     Icons.bloodtype,
-                    context,
+                    KanDegerleriGirisEkrani(),
                   ),
                   healthButton(
-                    "KALP DEGERLERI",
+                    context,
+                    "KALP DEĞERLERİ",
                     Colors.pink[300],
                     Icons.favorite,
-                    context,
+                    HeartRatePage(),
                   ),
                   healthButton(
-                    "SEKER DEGERLERI",
+                    context,
+                    "ŞEKER DEĞERLERİ",
                     Colors.lightGreen[400],
                     Icons.medical_services,
-                    context,
+                    SekerGirisEkrani(),
                   ),
                   healthButton(
-                    "TANSIYON DEGERLERI",
+                    context,
+                    "TANSİYON DEĞERLERİ",
                     Colors.yellow[600],
                     Icons.monitor_heart,
-                    context,
+                    TansiyonGirisEkrani(),
                   ),
                 ],
               ),
@@ -84,7 +93,7 @@ class DegerGiris extends StatelessWidget {
     );
   }
 
-  Widget healthButton(String text, Color? color, IconData icon, BuildContext context) {
+  Widget healthButton(BuildContext context, String text, Color? color, IconData icon, Widget? page) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: ElevatedButton(
@@ -96,25 +105,14 @@ class DegerGiris extends StatelessWidget {
           padding: EdgeInsets.symmetric(vertical: 50, horizontal: 30),
         ),
         onPressed: () {
-          if (text == "TANSIYON DEGERLERI") {
+          if (page != null) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => TansiyonGirisEkrani()),
-            );
-          } else if (text == "SEKER DEGERLERI") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => SekerGirisEkrani()),
-            );
-          } else if (text == "KAN DEGERLERI") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => KanDegerleriGirisEkrani()),
+              MaterialPageRoute(builder: (context) => page),
             );
           } else {
-            // Diğer butonlara bastığında şimdilik snackbar
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("$text ekranı henüz hazır değil 😅")),
+              SnackBar(content: Text('$text sayfası henüz eklenmedi.')),
             );
           }
         },

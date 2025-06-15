@@ -241,8 +241,13 @@ if (id == null) {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor:Color(0xFF94D9C6),
+        elevation: 0,
+      ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
         child: Column(
           children: [
             SizedBox(height: 40),
@@ -267,7 +272,8 @@ if (id == null) {
                 prefixIcon: Icon(Icons.search),
                 hintText: 'Ara...',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
                 ),
                 filled: true,
                 fillColor: Colors.grey[200],
@@ -295,39 +301,52 @@ if (id == null) {
               children: [
                 ElevatedButton.icon(
                   onPressed: _showAddAppointmentDialog,
-                  icon: Icon(Icons.add, color: Colors.black54),
-                  label: Text('Randevu Ekle', style: TextStyle(color: Colors.black54)),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[300]),
+                  icon: Icon(Icons.add, color: Colors.teal),
+                  label: Text('Randevu Ekle', style: TextStyle(color: Colors.teal)),
+                  style: ElevatedButton.styleFrom(backgroundColor: Color.fromARGB(255, 233, 247, 244),foregroundColor: Colors.teal),
                 ),
                 ElevatedButton.icon(
                   onPressed: _showDeleteAppointmentDialog,
-                  icon: Icon(Icons.delete, color: Colors.red),
-                  label: Text('Randevu Sil', style: TextStyle(color: Colors.red)),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[300]),
+                  icon: Icon(Icons.delete, color:  const Color.fromARGB(255, 168, 68, 61)),
+                  label: Text('Randevu Sil', style: TextStyle(color: const Color.fromARGB(255, 168, 68, 61))),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 253, 216, 216)),
                 ),
               ],
             ),
             SizedBox(height: 20),
-            Expanded(
-              child: todaysAppointments.isNotEmpty
-                  ? ListView.builder(
-                      itemCount: todaysAppointments.length,
-                      itemBuilder: (context, index) {
-                        var appointment = todaysAppointments[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                          child: ListTile(
-                            title: Text("Doktor: ${appointment["doctor"]}"),
-                            subtitle: Text("Saat: ${appointment["time"]}\nNot: ${appointment["note"]}"),
-                          ),
-                        );
-                      },
-                    )
-                  : Center(
-                      child: Text("Bugün için randevu yok.", style: TextStyle(color: Colors.grey)),
-                    ),
-            ),
+            Center(
+  child: SizedBox(
+    width: 320, // ← Genişlik burada belirleniyor
+    child: Divider(
+      thickness: 2,
+      color: Colors.teal,
+    ),
+  ),
+),
+SizedBox(height: 20),
+        SizedBox(
+          height: 200,  // Örneğin sabit yükseklik verin
+          child: todaysAppointments.isNotEmpty
+              ? ListView.builder(
+                  itemCount: todaysAppointments.length,
+                  itemBuilder: (context, index) {
+                    var appointment = todaysAppointments[index];
+                    return Card(
+                      color: Color.fromARGB(255, 233, 247, 244), 
+                      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                      child: ListTile(
+                        title: Text("Doktor: ${appointment["doctor"]}"),
+                        subtitle: Text("Saat: ${appointment["time"]}\nNot: ${appointment["note"]}"),
+                      ),
+                    );
+                  },
+                )
+              : Center(
+                  child: Text("Bugün için randevu yok.", style: TextStyle(color: Colors.grey)),
+                ),
+        ),
           ],
+        ),
         ),
       ),
     );

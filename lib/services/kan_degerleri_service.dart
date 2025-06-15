@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class KanDegerleriService {
-  final String _baseUrl = "http://localhost:7293/api/Deger";  // URL of your API
+  final String _baseUrl = "http://192.168.1.3:5000/api/Deger";  // URL of your API
 
   // Fetching blood values from the API
   Future<List<Map<String, dynamic>>> kanVerileriniGetir(String token) async {
@@ -43,7 +43,7 @@ Future<bool> kanDegeriEkle({
   required String olcumZamani,
   required DateTime tarih, // ✅ tarih eklendi
 }) async {
-  var url = Uri.parse("http://localhost:7293/api/Deger/ekle"); 
+  var url = Uri.parse("http://192.168.1.3:5000/api/Deger/ekle"); 
 
   var response = await http.post(
     url,

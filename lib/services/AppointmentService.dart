@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 class AppointmentService {
-  static const String baseUrl = 'http://localhost:7293/api/RandevuTakip';
+  static const String baseUrl = 'http://192.168.1.3:5000/api/RandevuTakip';
 
   // Randevuları almak için
   static Future<List<Map<String, dynamic>>> getAppointments() async {
@@ -51,7 +51,7 @@ class AppointmentService {
     }
 
     final response = await http.post(
-      Uri.parse('http://localhost:7293/api/RandevuTakip/ekle'),
+      Uri.parse('http://192.168.1.3:5000/api/RandevuTakip/ekle'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',

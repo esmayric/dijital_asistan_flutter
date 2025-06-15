@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class IlacService {
-  static const String baseUrl = 'http://localhost:7293/api/Ilac';
+  static const String baseUrl = 'http://192.168.1.3:5000/api/Ilac';
 
   // Tüm ilaçları getirme
   static Future<List<Map<String, dynamic>>> getIlaclar() async {

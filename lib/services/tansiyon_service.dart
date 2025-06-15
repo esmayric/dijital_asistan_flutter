@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class TansiyonService {
-  final String _baseUrl = "http://localhost:7293/api/Deger";
+  final String _baseUrl = "http://192.168.1.3:5000/api/Deger";
 
   Future<List<Map<String, dynamic>>> tansiyonVerileriniGetir(String token) async {
     var url = Uri.parse(_baseUrl);
@@ -41,7 +41,7 @@ class TansiyonService {
   required String tahlilSonuclari,
   required String token,
 }) async {
-  var url = Uri.parse("http://localhost:7293/api/Deger/ekle"); 
+  var url = Uri.parse("http://192.168.1.3:5000/api/Deger/ekle"); 
 
   var response = await http.post(
     url,

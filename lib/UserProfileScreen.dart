@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/services/UserService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_application_1/services/UserService.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final int userId;
@@ -14,6 +14,28 @@ class UserProfileScreen extends StatefulWidget {
 class _UserProfileScreenState extends State<UserProfileScreen> {
   Map<String, dynamic>? userData;
   bool isLoading = true;
+  bool isAcilYakinEnabled = false;
+  bool isAdresEnabled = false;
+
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController _adController = TextEditingController();
+  final TextEditingController _soyadController = TextEditingController();
+  final TextEditingController _telefonController = TextEditingController();
+  final TextEditingController _tcController = TextEditingController();
+  final TextEditingController _yasController = TextEditingController();
+  final TextEditingController _cinsiyetController = TextEditingController();
+  final TextEditingController _boyController = TextEditingController();
+  final TextEditingController _kiloController = TextEditingController();
+  final TextEditingController _acilIsimController = TextEditingController();
+  final TextEditingController _acilTelController = TextEditingController();
+  final TextEditingController _acilEmailController = TextEditingController();
+  final TextEditingController _adresDetayController = TextEditingController();
+
+  String? selectedKanGrubu;
+  String? token;
+
+  final List<String> _kanGruplari = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', '0+', '0-'];
 
   @override
   void initState() {
@@ -23,142 +45,264 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Future<void> _fetchUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    token = prefs.getString('token');
 
     if (token != null) {
-      final data = await UserService.getUserProfile(widget.userId, token);
-      setState(() {
-        userData = data;
-        isLoading = false;
-      });
+      final data = await UserService.getUserProfile(token!);
+      if (data != null && mounted) {
+        setState(() {
+          userData = data;
+          _adController.text = data["ad"] ?? "";
+          _soyadController.text = data["soyad"] ?? "";
+          _telefonController.text = data["telefonNumarasi"] ?? "";
+          _tcController.text = data["tcKimlikNo"] ?? "";
+          _yasController.text = data["yas"].toString();
+          _cinsiyetController.text = data["cinsiyet"] ?? "";
+          _boyController.text = data["boy"].toString();
+          _kiloController.text = data["kilo"].toString();
+          selectedKanGrubu = data["kanGrubu"];
+        });
+      }
+    }
+    setState(() => isLoading = false);
+  }
+
+  Future<void> _updateProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final updatedData = {
+      "ad": _adController.text,
+      "soyad": _soyadController.text,
+      "telefonNumarasi": _telefonController.text,
+      "tcKimlikNo": _tcController.text,
+      "yas": int.tryParse(_yasController.text) ?? 0,
+      "cinsiyet": _cinsiyetController.text,
+      "kanGrubu": selectedKanGrubu,
+      "boy": int.tryParse(_boyController.text) ?? 0,
+      "kilo": int.tryParse(_kiloController.text) ?? 0,
+    };
+
+    final success = await UserService.updateUserProfile(updatedData, token!);
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Profil başarıyla güncellendi")));
+      _fetchUserData();
     } else {
-      setState(() {
-        isLoading = false;
-      });
-      print("Token bulunamadı.");
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Güncelleme başarısız.")));
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : userData == null
-              ? Center(child: Text("Kullanıcı bilgisi alınamadı."))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
+  Future<void> _addAcilYakin() async {
+    final data = {
+      "isim": _acilIsimController.text,
+      "telefonNumarasi": _acilTelController.text,
+      "eposta": _acilEmailController.text,
+    };
+
+    final success = await UserService.addAcilYakin(data, token!);
+    if (success) {
+      _fetchUserData();
+      _acilIsimController.clear();
+      _acilTelController.clear();
+      _acilEmailController.clear();
+      setState(() => isAcilYakinEnabled = false);
+    }
+  }
+
+  Future<void> _deleteAcilYakin(int id) async {
+    final success = await UserService.deleteAcilYakin(id, token!);
+    if (success) _fetchUserData();
+  }
+
+  Future<void> _addAdres() async {
+    final data = {"adresDetay": _adresDetayController.text};
+    final success = await UserService.addAdres(data, token!);
+    if (success) {
+      _fetchUserData();
+      _adresDetayController.clear();
+      setState(() => isAdresEnabled = false);
+    }
+  }
+
+  Future<void> _deleteAdres(int id) async {
+    final success = await UserService.deleteAdres(id, token!);
+    if (success) _fetchUserData();
+  }
+
+  Widget _buildLabeledField(String label, TextEditingController controller, {TextInputType type = TextInputType.text}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: controller,
+          keyboardType: type,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.grey.shade100,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+          ),
+          validator: (value) => value == null || value.isEmpty ? "$label boş olamaz." : null,
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+@override
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      backgroundColor: const Color(0xFF94D9C6),
+      elevation: 0,
+      centerTitle: true,
+      iconTheme: const IconThemeData(color: Colors.black),
+    ),
+    backgroundColor: const Color(0xFFFDFDFD),
+    body: isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ÜSTTEKİ LOGO VE BAŞLIK
+                  Center(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 10),
+                        Image.asset("assets/logo.png", height: 80),
+                        const SizedBox(height: 10),
+                        const Text(
+                          "PROFİL",
+                          style: TextStyle(
+                            color: Colors.teal,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text("Profil Bilgileri", style: TextStyle(fontSize: 16, color: Colors.grey)),
+                  const Divider(thickness: 1),
+
+                  // PROFİL ALANLARI
+                  const SizedBox(height: 10),
+                  _buildLabeledField("Ad", _adController),
+                  _buildLabeledField("Soyad", _soyadController),
+                  _buildLabeledField("Telefon Numarası", _telefonController, type: TextInputType.phone),
+                  _buildLabeledField("TC Kimlik No", _tcController, type: TextInputType.number),
+                  _buildLabeledField("Yaş", _yasController, type: TextInputType.number),
+                  _buildLabeledField("Cinsiyet", _cinsiyetController),
+                  Row(
                     children: [
-                      // Logo PNG
-                      Image.asset(
-                        'assets/logo.png',
-                        height: 70,
-                      ),
-                      SizedBox(height: 20),
-                      _buildSectionHeader("PROFİL"),
-                      // Profil Fotoğrafı
-                      CircleAvatar(
-                        radius: 55,
-                        backgroundImage: NetworkImage(
-                          userData!["profilResmiUrl"] ??
-                              "https://via.placeholder.com/150",
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        "${userData!["ad"]} ${userData!["soyad"]}",
-                        style:
-                            TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                      ),
-                      Divider(height: 40, thickness: 1),
-
-                      // Ad ve Soyad kutucukları
-                      _buildProfileItem("Ad", userData!["ad"]),
-                      _buildProfileItem("Soyad", userData!["soyad"]),
-
-                      // Grup başlığı
-
-                      _buildProfileItem("Telefon", userData!["telefonNumarasi"]),
-                      _buildProfileItem("Yaş", userData!["yas"].toString()),
-
-                      // Diğer Bilgiler
-                      _buildProfileItem("E-posta", userData!["eposta"]),
-                      _buildProfileItem("Cinsiyet", userData!["cinsiyet"]),
-                      _buildProfileItem(
-                          "Adres", userData!["adres"] ?? "Belirtilmemiş"),
-                      SizedBox(height: 20),
-
-                      // Kaydet Butonu
-                      ElevatedButton(
-                        onPressed: () {
-                          // Kaydetme işlemi
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFA3D9C9),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30)),
-                          padding: EdgeInsets.symmetric(
-                              vertical: 14, horizontal: 32),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          "Kaydet",
-                          style: TextStyle(fontSize: 16, color: Colors.black),
-                        ),
-                      ),
+                      Expanded(child: _buildLabeledField("Boy", _boyController, type: TextInputType.number)),
+                      const SizedBox(width: 10),
+                      Expanded(child: _buildLabeledField("Kilo", _kiloController, type: TextInputType.number)),
                     ],
                   ),
-                ),
-    );
-  }
+                  const Text("Kan Grubu", style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  DropdownButtonFormField<String>(
+                    value: selectedKanGrubu,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey.shade100,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    items: _kanGruplari
+                        .map((kg) => DropdownMenuItem(value: kg, child: Text(kg)))
+                        .toList(),
+                    onChanged: (val) => setState(() => selectedKanGrubu = val),
+                    validator: (value) => value == null ? "Kan grubu seçilmelidir." : null,
+                  ),
+                  const SizedBox(height: 20),
 
-  // Bilgi kutusu widget'ı
-  Widget _buildProfileItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        decoration: BoxDecoration(
-          color: Color(0xFFF0F0F0),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Text(
-              "$label: ",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            Expanded(
-              child: Text(
-                value,
-                style: TextStyle(fontSize: 16),
-                overflow: TextOverflow.ellipsis,
+                  const Divider(thickness: 1),
+                  const Text("Adres Bilgileri", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 10),
+                  if (userData?['adresler'] != null)
+                    ...List<Widget>.from(
+                      (userData!['adresler'] as List).map(
+                        (adres) => Card(
+                          child: ListTile(
+                            title: Text(adres['adresDetay']),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteAdres(adres['id']),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (isAdresEnabled) ...[
+                    _buildLabeledField("Adres Detayı", _adresDetayController),
+                    ElevatedButton(onPressed: _addAdres, child: const Text("Ekle")),
+                  ],
+                  TextButton(
+                    onPressed: () => setState(() => isAdresEnabled = !isAdresEnabled),
+                    child: Text(isAdresEnabled ? "İptal" : "Adres Güncelle"),
+                  ),
+
+                  const Divider(thickness: 1),
+                  const Text("Acil Numaralar", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 10),
+                  if (userData?['acilYakinlar'] != null)
+                    ...List<Widget>.from(
+                      (userData!['acilYakinlar'] as List).map(
+                        (yakin) => Card(
+                          child: ListTile(
+                            title: Text("${yakin['isim']} - ${yakin['telefonNumarasi']}"),
+                            subtitle: Text(yakin['eposta']),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteAcilYakin(yakin['id']),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (isAcilYakinEnabled) ...[
+                    _buildLabeledField("İsim", _acilIsimController),
+                    _buildLabeledField("Telefon", _acilTelController, type: TextInputType.phone),
+                    _buildLabeledField("E-Posta", _acilEmailController, type: TextInputType.emailAddress),
+                    ElevatedButton(onPressed: _addAcilYakin, child: const Text("Ekle")),
+                  ],
+                  TextButton(
+                    onPressed: () => setState(() => isAcilYakinEnabled = !isAcilYakinEnabled),
+                    child: Text(isAcilYakinEnabled ? "İptal" : "Acil Yakın Güncelle"),
+                  ),
+
+                  const SizedBox(height: 20),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _updateProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFA3D9C9),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                        elevation: 0,
+                      ),
+                      child: const Text("Kaydet", style: TextStyle(color: Colors.black)),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Grup başlığı widget'ı
- // Grup başlığı widget'ı
-Widget _buildSectionHeader(String title) {
-  return Container(
-    width: double.infinity,
-    margin: EdgeInsets.only(top: 20, bottom: 10),
-    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-    child: Text(
-      title,
-      textAlign: TextAlign.center, // Yazıyı ortala
-      style: TextStyle(
-        color: Color(0xFFA3D9C9), // Yazı rengi turkuaz
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
+          ),
   );
 }
 }

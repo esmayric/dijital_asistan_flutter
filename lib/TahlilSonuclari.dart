@@ -1,11 +1,9 @@
 import 'dart:convert';
+import 'dart:io' show File;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io' show File;
+import 'package:flutter_application_1/services/TahlilService.dart';
 
 class Tahlil {
   final String tarih;
@@ -40,168 +38,58 @@ class TahlilSonuclari extends StatefulWidget {
 class _TahlilSonuclariState extends State<TahlilSonuclari> {
   List<Tahlil> tahliller = [];
   bool isLoading = false;
-  String? token;
-
-  final String baseUrl = 'http://localhost:7293';
 
   @override
   void initState() {
     super.initState();
-    loadToken();
-  }
-
-  Future<void> loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      token = prefs.getString('token');
-    });
-    if (token != null) {
-      await fetchTahliller();
-    }
+    fetchTahliller();
   }
 
   Future<void> fetchTahliller() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final uri = Uri.parse('$baseUrl/api/Rapor/listele');
-      final response = await http.get(
-        uri,
-        headers: {'Authorization': 'Bearer $token'},
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonResponse = json.decode(response.body);
-        setState(() {
-          tahliller = jsonResponse.map((item) => Tahlil.fromJson(item)).toList();
-        });
-      } else {
-        print('Listeleme hatası: ${response.statusCode}');
-        print('Hata mesajı: ${response.body}');
-      }
-    } catch (e) {
-      print('Listeleme hatası: $e');
-    } finally {
+    setState(() => isLoading = true);
+    final response = await TahlilService.raporListele();
+    if (response != null) {
       setState(() {
-        isLoading = false;
+        tahliller = response.map((item) => Tahlil.fromJson(item)).toList();
       });
     }
-  }
-
-  Future<Tahlil?> uploadFile(PlatformFile pickedFile) async {
-    if (token == null) {
-      print("❌ Token bulunamadı.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen giriş yapın. Token bulunamadı.')),
-      );
-      return null;
-    }
-
-    try {
-      if (kIsWeb) {
-        final fileBytes = pickedFile.bytes;
-        if (fileBytes == null) return null;
-
-        var uri = Uri.parse('$baseUrl/api/Rapor/yukle');
-        var request = http.MultipartRequest('POST', uri);
-        request.headers['Authorization'] = 'Bearer $token';
-
-        var multipartFile = http.MultipartFile.fromBytes(
-          'file',
-          fileBytes,
-          filename: pickedFile.name,
-          contentType: MediaType('application', 'pdf'),
-        );
-
-        request.files.add(multipartFile);
-
-        var streamedResponse = await request.send();
-        var responseString = await streamedResponse.stream.bytesToString();
-
-        if (streamedResponse.statusCode == 200) {
-          var jsonResponse = json.decode(responseString);
-          return Tahlil.fromJson(jsonResponse);
-        } else {
-          print('Upload failed with status: ${streamedResponse.statusCode}');
-          print('Response: $responseString');
-          return null;
-        }
-      } else {
-        if (pickedFile.path == null) return null;
-        File file = File(pickedFile.path!);
-
-        var uri = Uri.parse('$baseUrl/api/Rapor/yukle');
-        var request = http.MultipartRequest('POST', uri);
-        request.headers['Authorization'] = 'Bearer $token';
-
-        request.files.add(await http.MultipartFile.fromPath(
-          'file',
-          file.path,
-          contentType: MediaType('application', 'pdf'),
-          filename: pickedFile.name,
-        ));
-
-        var streamedResponse = await request.send();
-        var responseString = await streamedResponse.stream.bytesToString();
-
-        if (streamedResponse.statusCode == 200) {
-          var jsonResponse = json.decode(responseString);
-          return Tahlil.fromJson(jsonResponse);
-        } else {
-          print('Upload failed with status: ${streamedResponse.statusCode}');
-          print('Response: $responseString');
-          return null;
-        }
-      }
-    } catch (e) {
-      print('Upload error: $e');
-      return null;
-    }
+    setState(() => isLoading = false);
   }
 
   Future<void> pickAndUploadFile() async {
-    setState(() {
-      isLoading = true;
-    });
-
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
-        withData: kIsWeb,
+        withData: true,
       );
 
       if (result == null || result.files.isEmpty) {
-        setState(() {
-          isLoading = false;
-        });
+        _showMessage("❗ Dosya seçilmedi.");
         return;
       }
 
       final pickedFile = result.files.first;
 
-      final yeniTahlil = await uploadFile(pickedFile);
+      final uploadedJson = kIsWeb
+          ? await TahlilService.raporYukle(pickedFile.bytes!, fileName: pickedFile.name)
+          : await TahlilService.raporYukle(File(pickedFile.path!));
 
-      if (yeniTahlil != null) {
+      if (uploadedJson != null) {
+        final yeniTahlil = Tahlil.fromJson(uploadedJson);
         setState(() {
           tahliller.insert(0, yeniTahlil);
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Dosya yüklenirken hata oluştu.')),
-        );
+        _showMessage("❌ Dosya yüklenemedi.");
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hata: $e')),
-      );
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
+      _showMessage("⚠ Hata: $e");
     }
+  }
+
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   Widget _buildTahlilCard(Tahlil tahlil) {
@@ -210,8 +98,9 @@ class _TahlilSonuclariState extends State<TahlilSonuclari> {
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         elevation: 3,
+        color: Colors.grey[100],
         child: ExpansionTile(
-          leading: const Icon(Icons.insert_drive_file, size: 40, color: Colors.blue),
+          leading: const Icon(Icons.insert_drive_file, size: 40, color: Colors.teal),
           title: Text("Tarih: ${tahlil.tarih}", style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text("Tür: ${tahlil.tur}"),
           childrenPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
@@ -229,26 +118,49 @@ class _TahlilSonuclariState extends State<TahlilSonuclari> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Tahlil Sonuçları"),
-        centerTitle: true,
+        backgroundColor:Color(0xFF94D9C6),
+        elevation: 0,
       ),
+
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(children: [
-              Container(
-                height: 80,
-                width: 80,
-                decoration: BoxDecoration(color: Colors.grey[300], shape: BoxShape.circle),
-                child: const Icon(Icons.image, size: 50, color: Colors.grey),
+              Center(
+              child: Column(
+                children: [
+                  Image.asset(
+                    "assets/logo.png",
+                    height: 80,
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "TAHLİL SONUÇLARI",
+                    style: TextStyle(
+                      color: Colors.teal,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(Icons.search, color: Colors.teal),
+                      hintText: "Ara...",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[200],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              const Text(
-                "TAHLİL SONUÇLARI",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+            ),
             ]),
           ),
           const Divider(),
@@ -259,17 +171,15 @@ class _TahlilSonuclariState extends State<TahlilSonuclari> {
                     ? const Center(child: Text("Henüz tahlil yüklenmedi."))
                     : ListView.builder(
                         itemCount: tahliller.length,
-                        itemBuilder: (context, index) {
-                          return _buildTahlilCard(tahliller[index]);
-                        },
+                        itemBuilder: (context, index) => _buildTahlilCard(tahliller[index]),
                       ),
           ),
           Padding(
             padding: const EdgeInsets.all(15.0),
             child: ElevatedButton(
-              onPressed: isLoading ? null : pickAndUploadFile,
+              onPressed: pickAndUploadFile,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: Colors.teal,
                 minimumSize: const Size(double.infinity, 50),
               ),
               child: const Text("Tahlil Yükleyin", style: TextStyle(color: Colors.white, fontSize: 16)),
