@@ -1,16 +1,20 @@
-# flutter_application_1
+# Dijital Asistan Flutter Uygulaması
 
-A new Flutter project.
+Bu mobil uygulama, kronik hastalık ve yaşlı bireylerin günlük sağlık takibini kolaylaştırmak amacıyla geliştirilmiştir. Kullanıcı dostu arayüzü sayesinde sağlık verilerinin takibi, adım sayısı, beslenme önerileri ve acil durum bilgilerinin yönetimi gibi birçok özelliği bir araya getirir.
 
-## Getting Started
+## 📱 Özellikler
 
-This project is a starting point for a Flutter application.
+- 👤 **Kullanıcı Profili Yönetimi**: Ad, soyad, iletişim, kan grubu, boy, kilo ve daha fazlası.
+- 🏥 **Tahlil Sonuçları Kaydı**: Tahlil tarihlerini ve sonuçlarını kaydetme.
+- 🍽️ **Beslenme Öneri Sistemi**: Sağlık verilerine göre yapay zeka destekli yemek önerileri.
+- 🚨 **Acil Durum Bilgileri**: Acil durumda ulaşılacak kişi ve adres bilgisi yönetimi.
+- 🦶 **Adım Sayar Entegrasyonu**: Günlük adım takibi ve ölçüm geçmişi.
+- 📊 **Veri Analizi**: Toplanan verilerin analiz edilerek kullanıcıya faydalı bilgiler sunulması.
 
-A few resources to get you started if this is your first Flutter project:
+## 🚀 Başlarken
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Projeyi çalıştırmak için:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter pub get
+flutter run
